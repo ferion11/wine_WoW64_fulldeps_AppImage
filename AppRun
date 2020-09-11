@@ -42,11 +42,11 @@ fi
 export MAIN32LDLIBRARY="${HERE}/usr/lib32/ld-linux.so.2"
 export MAIN64LDLIBRARY="${HERE}/usr/lib/ld-linux-x86-64.so.2"
 
-MAIN80386="$(file -L "${MAIN}" | grep 80386)"
-if [ -z "${MAIN80386}" ]; then
-	export MAINLDLIBRARY="${MAIN64LDLIBRARY}"
-else
+ELFNUM="$(od -An -t x1 -j 4 -N 1 "${MAIN}")"
+if [ "${ELFNUM}" == " 01" ]; then
 	export MAINLDLIBRARY="${MAIN32LDLIBRARY}"
+else
+	export MAINLDLIBRARY="${MAIN64LDLIBRARY}"
 fi
 #===================================================================
 #===================================================================
