@@ -2,6 +2,7 @@
 HERE="$(dirname "$(readlink -f "${0}")")"
 #===================================================================
 make_dir() { [ ! -d "${1}" ] && mkdir -p "${1}"; };
+#===================================================================
 
 # Allow the AppImage to be symlinked to e.g., /usr/bin/wineserver
 if [ -n "${APPIMAGE}" ] ; then
@@ -9,6 +10,48 @@ if [ -n "${APPIMAGE}" ] ; then
 else
 	BINARY_NAME="$(basename "${0}")"
 fi
+
+#LD
+export MAIN32LDLIBRARY="${HERE}/usr/lib32/ld-linux.so.2"
+export MAIN64LDLIBRARY="${HERE}/usr/lib/ld-linux-x86-64.so.2"
+
+# Load winecfg if no arguments given
+APPLICATION=""
+if [ -z "${*}" ] ; then
+	APPLICATION="winecfg"
+fi
+
+# change some scripts to exe executables
+if [[ "${1}" =~ ^(winecfg|wineboot|regedit|regsvr32|msiexec|msidb|notepad|winefile|winemine)$ ]]; then
+	args=( "${@}" )
+	args[0]="${1}.exe"
+	set "${args[@]}"
+fi
+
+if [ -n "${1}" ] && [ -x "${HERE}/bin/${1}" ] ; then
+	MAIN="${HERE}/bin/${1}" ; shift
+elif [ -n "${1}" ] && [ -x "${HERE}/usr/bin/${1}" ] ; then
+	MAIN="${HERE}/usr/bin/${1}" ; shift
+elif [ -x "${HERE}/bin/${BINARY_NAME}" ] ; then
+	MAIN="${HERE}/bin/${BINARY_NAME}"
+elif [ -x "${HERE}/usr/bin/${BINARY_NAME}" ] ; then
+	MAIN="${HERE}/usr/bin/${BINARY_NAME}"
+elif [ -x "${INSTALL_DIR}/bin/wine64" ] ; then
+	MAIN="${INSTALL_DIR}/bin/wine64"
+else
+	MAIN="${INSTALL_DIR}/bin/wine"
+fi
+
+MAIN80386="$(file -L "${MAIN}" | grep 80386)"
+if [ -z "${MAIN80386}" ]; then
+	export WINELDLIBRARY="${MAIN64LDLIBRARY}"
+else
+	export WINELDLIBRARY="${MAIN32LDLIBRARY}"
+fi
+#===================================================================
+#===================================================================
+export PATH="${HERE}/bin:${HERE}/usr/bin:${PATH}"
+#===================================================================
 #===================================================================
 
 # If not extract and overwrite, ${HERE}/lib is a link to ${HERE}/usr/lib, that link to ${HERE}/usr/lib64
@@ -40,10 +83,6 @@ export D3D_MODULE_PATH="${HERE}/usr/lib/d3d:${HERE}/usr/lib32/d3d:${D3D_MODULE_P
 
 #Font Config
 export FONTCONFIG_PATH="${HERE}/etc/fonts:${FONTCONFIG_PATH}"
-
-#LD
-export MAIN32LDLIBRARY="${HERE}/usr/lib32/ld-linux.so.2"
-export MAIN64LDLIBRARY="${HERE}/usr/lib/ld-linux-x86-64.so.2"
 #----------------------------------------
 
 # GStreamer environment variables
@@ -82,45 +121,12 @@ export WINEDLLPATH="${HERE}/lib64/wine/fakedlls:${HERE}/lib/wine/fakedlls:${WINE
 export LD_LIBRARY_PATH="${HERE}/lib64/wine:${HERE}/lib/wine:${LD_LIBRARY_PATH}"
 #----------------------------------------
 
-# Load winecfg if no arguments given
-APPLICATION=""
-if [ -z "${*}" ] ; then
-	APPLICATION="winecfg"
-fi
-
-# change some scripts to exe executables
-if [[ "${1}" =~ ^(winecfg|wineboot|regedit|regsvr32|msiexec|msidb|notepad|winefile|winemine)$ ]]; then
-	args=( "${@}" )
-	args[0]="${1}.exe"
-	set "${args[@]}"
-fi
-
-if [ -n "${1}" ] && [ -x "${HERE}/bin/${1}" ] ; then
-	MAIN="${HERE}/bin/${1}" ; shift
-elif [ -n "${1}" ] && [ -x "${HERE}/usr/bin/${1}" ] ; then
-	MAIN="${HERE}/usr/bin/${1}" ; shift
-elif [ -x "${HERE}/bin/${BINARY_NAME}" ] ; then
-	MAIN="${HERE}/bin/${BINARY_NAME}"
-elif [ -x "${HERE}/usr/bin/${BINARY_NAME}" ] ; then
-	MAIN="${HERE}/usr/bin/${BINARY_NAME}"
-else
-	MAIN="${HERE}/bin/wine"
-fi
-
 # Exec outside apps with inside environment (make the link name "ExternalExec")
 if [ "${BINARY_NAME}" = "ExternalExec" ] && [ -n "${1}" ] && [ -x "${1}" ]; then
 	MAIN="${1}" ; shift
 fi
 #===================================================================
 
-MAIN80386="$(file -L "${MAIN}" | grep 80386)"
-if [ -z "${MAIN80386}" ]; then
-	export WINELDLIBRARY="${MAIN64LDLIBRARY}"
-else
-	export WINELDLIBRARY="${MAIN32LDLIBRARY}"
-fi
-
-export PATH="${HERE}/bin:${HERE}/usr/bin:${PATH}"
 if [ -z "${APPLICATION}" ] ; then
 	#LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}" | cat
 	LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}"
