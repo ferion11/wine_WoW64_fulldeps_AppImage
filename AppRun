@@ -1,0 +1,132 @@
+#!/bin/bash -e
+HERE="$(dirname "$(readlink -f "${0}")")"
+#===================================================================
+make_dir() { [ ! -d "${1}" ] && mkdir -p "${1}"; };
+
+# Allow the AppImage to be symlinked to e.g., /usr/bin/wineserver
+if [ -n "${APPIMAGE}" ] ; then
+	BINARY_NAME="$(basename "${ARGV0}")"
+else
+	BINARY_NAME="$(basename "${0}")"
+fi
+#===================================================================
+
+# If not extract and overwrite, ${HERE}/lib is a link to ${HERE}/usr/lib, that link to ${HERE}/usr/lib64
+export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${HERE}/usr/lib64:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${HERE}/usr/lib32:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${HERE}/lib64:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${HERE}/lib32:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${HERE}/lib:${LD_LIBRARY_PATH}"
+#----------------------------------------
+
+#Sound Library
+export LD_LIBRARY_PATH="${HERE}/usr/lib/pulseaudio:${HERE}/usr/lib32/pulseaudio:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${HERE}/usr/lib/alsa-lib:${HERE}/usr/lib32/alsa-lib:${LD_LIBRARY_PATH}"
+export LADSPA_PATH="${HERE}/usr/lib/ladspa:${HERE}/usr/lib32/ladspa:${LADSPA_PATH}"
+export AO_PLUGIN_PATH="${HERE}/usr/lib/ao/plugins-4:${HERE}/usr/lib32/ao/plugins-4:${AO_PLUGIN_PATH}"
+
+# For mpg123
+export LD_LIBRARY_PATH="${HERE}/usr/lib/mpg123:${HERE}/usr/lib32/mpg123:${LD_LIBRARY_PATH}"
+
+# for libomxil-bellagio
+export BELLAGIO_SEARCH_PATH="${HERE}/usr/lib/bellagio:${HERE}/usr/lib/omxloaders:${HERE}/usr/lib:${HERE}/usr/lib32/bellagio:${HERE}/usr/lib32/omxloaders:${HERE}/usr/lib32"
+
+# libGL drivers
+export LIBGL_DRIVERS_PATH="${HERE}/usr/lib/dri:${HERE}/usr/lib32/dri:${LIBGL_DRIVERS_PATH}"
+
+# Gallium Nine
+export D3D_MODULE_PATH="${HERE}/usr/lib/d3d:${HERE}/usr/lib32/d3d:${D3D_MODULE_PATH}"
+
+#Font Config
+export FONTCONFIG_PATH="${HERE}/etc/fonts:${FONTCONFIG_PATH}"
+
+#LD
+export MAIN32LDLIBRARY="${HERE}/usr/lib32/ld-linux.so.2"
+export MAIN64LDLIBRARY="${HERE}/usr/lib/ld-linux-x86-64.so.2"
+#----------------------------------------
+
+# GStreamer environment variables
+export GST_REGISTRY_REUSE_PLUGIN_SCANNER="no"
+export GST_PLUGIN_SYSTEM_PATH_1_0="${HERE}/usr/lib/gstreamer-1.0/"
+
+export GST_PLUGIN_SCANNER_1_0="${HERE}/usr/lib/gstreamer-1.0/gst-plugin-scanner"
+export GST_PTP_HELPER_1_0="${HERE}/usr/lib/gstreamer-1.0/gst-ptp-helper"
+
+export GST_PLUGIN_PATH="${GST_PLUGIN_SYSTEM_PATH_1_0}"
+export GST_PLUGIN_SYSTEM_PATH="${GST_PLUGIN_SYSTEM_PATH_1_0}"
+export GST_PLUGIN_SCANNER="${GST_PLUGIN_SCANNER_1_0}"
+#===================================================================
+
+##Wine ENVs (see: https://wiki.winehq.org/Wine-Staging_Environment_Variables)
+# arch and bottle first:
+export WINEARCH=win64
+if [ -z "${WINEPREFIX}" ]
+then
+	export WINEPREFIX="${HOME}/.wine64"
+fi
+
+if [[ "${BINARY_NAME}" == "wine" ]]; then
+	export WINE="${HERE}/bin/wine"
+	export WINELOADER="${WINE}"
+else
+	export WINE="${HERE}/bin/wine64"
+	export WINELOADER="${WINE}"
+fi
+
+export WINEVERPATH="${HERE}"
+export WINESERVER="${HERE}/bin/wineserver"
+export WINEPATH="${HERE}/bin:${HERE}/lib64/wine:${HERE}/lib/wine:${WINEPATH}"
+export WINEDLLPATH="${HERE}/lib64/wine/fakedlls:${HERE}/lib/wine/fakedlls:${WINEDLLPATH}"
+
+export LD_LIBRARY_PATH="${HERE}/lib64/wine:${HERE}/lib/wine:${LD_LIBRARY_PATH}"
+#----------------------------------------
+
+# Load winecfg if no arguments given
+APPLICATION=""
+if [ -z "${*}" ] ; then
+	APPLICATION="winecfg"
+fi
+
+# change some scripts to exe executables
+if [[ "${1}" =~ ^(winecfg|wineboot|regedit|regsvr32|msiexec|msidb|notepad|winefile|winemine)$ ]]; then
+	args=( "${@}" )
+	args[0]="${1}.exe"
+	set "${args[@]}"
+fi
+
+if [ -n "${1}" ] && [ -x "${HERE}/bin/${1}" ] ; then
+	MAIN="${HERE}/bin/${1}" ; shift
+elif [ -n "${1}" ] && [ -x "${HERE}/usr/bin/${1}" ] ; then
+	MAIN="${HERE}/usr/bin/${1}" ; shift
+elif [ -x "${HERE}/bin/${BINARY_NAME}" ] ; then
+	MAIN="${HERE}/bin/${BINARY_NAME}"
+elif [ -x "${HERE}/usr/bin/${BINARY_NAME}" ] ; then
+	MAIN="${HERE}/usr/bin/${BINARY_NAME}"
+else
+	MAIN="${HERE}/bin/wine"
+fi
+
+# Exec outside apps with inside environment (make the link name "ExternalExec")
+if [ "${BINARY_NAME}" = "ExternalExec" ] && [ -n "${1}" ] && [ -x "${1}" ]; then
+	MAIN="${1}" ; shift
+fi
+#===================================================================
+
+MAIN80386="$(file -L "${MAIN}" | grep 80386)"
+if [ -z "${MAIN80386}" ]; then
+	export WINELDLIBRARY="${MAIN64LDLIBRARY}"
+else
+	export WINELDLIBRARY="${MAIN32LDLIBRARY}"
+fi
+
+export PATH="${HERE}/bin:${HERE}/usr/bin:${PATH}"
+if [ -z "${APPLICATION}" ] ; then
+	#LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}" | cat
+	LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}"
+	#"${WINELDLIBRARY}" "${MAIN}" "${@}"
+else
+	#LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}" | cat
+	LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}"
+	#"${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}"
+fi
