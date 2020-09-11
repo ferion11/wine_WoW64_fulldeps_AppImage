@@ -50,27 +50,24 @@ else
 fi
 #===================================================================
 #===================================================================
-export PATH="${HERE}/bin:${HERE}/usr/bin:${PATH}"
-#===================================================================
-#===================================================================
 
 # If not extract and overwrite, ${HERE}/lib is a link to ${HERE}/usr/lib, that link to ${HERE}/usr/lib64
-export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH="${HERE}/usr/lib64:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH="${HERE}/usr/lib32:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH="${HERE}/lib64:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH="${HERE}/lib32:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH="${HERE}/lib:${LD_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/usr/lib:${LD_MAIN_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/usr/lib64:${LD_MAIN_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/usr/lib32:${LD_MAIN_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/lib64:${LD_MAIN_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/lib32:${LD_MAIN_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/lib:${LD_MAIN_LIBRARY_PATH}"
 #----------------------------------------
 
 #Sound Library
-export LD_LIBRARY_PATH="${HERE}/usr/lib/pulseaudio:${HERE}/usr/lib32/pulseaudio:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH="${HERE}/usr/lib/alsa-lib:${HERE}/usr/lib32/alsa-lib:${LD_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/usr/lib/pulseaudio:${HERE}/usr/lib32/pulseaudio:${LD_MAIN_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/usr/lib/alsa-lib:${HERE}/usr/lib32/alsa-lib:${LD_MAIN_LIBRARY_PATH}"
 export LADSPA_PATH="${HERE}/usr/lib/ladspa:${HERE}/usr/lib32/ladspa:${LADSPA_PATH}"
 export AO_PLUGIN_PATH="${HERE}/usr/lib/ao/plugins-4:${HERE}/usr/lib32/ao/plugins-4:${AO_PLUGIN_PATH}"
 
 # For mpg123
-export LD_LIBRARY_PATH="${HERE}/usr/lib/mpg123:${HERE}/usr/lib32/mpg123:${LD_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/usr/lib/mpg123:${HERE}/usr/lib32/mpg123:${LD_MAIN_LIBRARY_PATH}"
 
 # for libomxil-bellagio
 export BELLAGIO_SEARCH_PATH="${HERE}/usr/lib/bellagio:${HERE}/usr/lib/omxloaders:${HERE}/usr/lib:${HERE}/usr/lib32/bellagio:${HERE}/usr/lib32/omxloaders:${HERE}/usr/lib32"
@@ -118,7 +115,7 @@ export WINESERVER="${HERE}/bin/wineserver"
 export WINEPATH="${HERE}/bin:${HERE}/lib64/wine:${HERE}/lib/wine:${WINEPATH}"
 export WINEDLLPATH="${HERE}/lib64/wine/fakedlls:${HERE}/lib/wine/fakedlls:${WINEDLLPATH}"
 
-export LD_LIBRARY_PATH="${HERE}/lib64/wine:${HERE}/lib/wine:${LD_LIBRARY_PATH}"
+export LD_MAIN_LIBRARY_PATH="${HERE}/lib64/wine:${HERE}/lib/wine:${LD_MAIN_LIBRARY_PATH}"
 #----------------------------------------
 
 # Exec outside apps with inside environment (make the link name "ExternalExec")
@@ -127,13 +124,16 @@ if [ "${BINARY_NAME}" = "ExternalExec" ] && [ -n "${1}" ] && [ -x "${1}" ]; then
 fi
 #===================================================================
 
+#export PATH="${HERE}/bin:${HERE}/usr/bin:${PATH}"
+export PATH="${HERE}/bin:${HERE}/usr/bin"
+export WINELDLIBRARY="${MAINLDLIBRARY}"
+export LD_LIBRARY_PATH="${LD_MAIN_LIBRARY_PATH}"
+
 if [ -z "${APPLICATION}" ] ; then
-	export WINELDLIBRARY="${MAINLDLIBRARY}"
 	#LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}" | cat
 	LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}"
 	#"${WINELDLIBRARY}" "${MAIN}" "${@}"
 else
-	export WINELDLIBRARY="${MAINLDLIBRARY}"
 	#LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}" | cat
 	LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}"
 	#"${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}"
