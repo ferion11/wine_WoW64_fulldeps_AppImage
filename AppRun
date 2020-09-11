@@ -11,10 +11,6 @@ else
 	BINARY_NAME="$(basename "${0}")"
 fi
 
-#LD
-export MAIN32LDLIBRARY="${HERE}/usr/lib32/ld-linux.so.2"
-export MAIN64LDLIBRARY="${HERE}/usr/lib/ld-linux-x86-64.so.2"
-
 # Load winecfg if no arguments given
 APPLICATION=""
 if [ -z "${*}" ] ; then
@@ -36,17 +32,21 @@ elif [ -x "${HERE}/bin/${BINARY_NAME}" ] ; then
 	MAIN="${HERE}/bin/${BINARY_NAME}"
 elif [ -x "${HERE}/usr/bin/${BINARY_NAME}" ] ; then
 	MAIN="${HERE}/usr/bin/${BINARY_NAME}"
-elif [ -x "${INSTALL_DIR}/bin/wine64" ] ; then
-	MAIN="${INSTALL_DIR}/bin/wine64"
+elif [ -x "${HERE}/bin/wine64" ] ; then
+	MAIN="${HERE}/bin/wine64"
 else
-	MAIN="${INSTALL_DIR}/bin/wine"
+	MAIN="${HERE}/bin/wine"
 fi
+
+#LD
+export MAIN32LDLIBRARY="${HERE}/usr/lib32/ld-linux.so.2"
+export MAIN64LDLIBRARY="${HERE}/usr/lib/ld-linux-x86-64.so.2"
 
 MAIN80386="$(file -L "${MAIN}" | grep 80386)"
 if [ -z "${MAIN80386}" ]; then
-	export WINELDLIBRARY="${MAIN64LDLIBRARY}"
+	export MAINLDLIBRARY="${MAIN64LDLIBRARY}"
 else
-	export WINELDLIBRARY="${MAIN32LDLIBRARY}"
+	export MAINLDLIBRARY="${MAIN32LDLIBRARY}"
 fi
 #===================================================================
 #===================================================================
@@ -128,10 +128,12 @@ fi
 #===================================================================
 
 if [ -z "${APPLICATION}" ] ; then
+	export WINELDLIBRARY="${MAINLDLIBRARY}"
 	#LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}" | cat
 	LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${@}"
 	#"${WINELDLIBRARY}" "${MAIN}" "${@}"
 else
+	export WINELDLIBRARY="${MAINLDLIBRARY}"
 	#LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}" | cat
 	LD_PRELOAD="${HERE}/bin/libhookexecv32.so ${HERE}/bin/libhookexecv64.so" "${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}"
 	#"${WINELDLIBRARY}" "${MAIN}" "${APPLICATION}"
