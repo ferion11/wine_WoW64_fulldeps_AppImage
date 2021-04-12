@@ -1,5 +1,5 @@
 #!/bin/bash -e
-FIXED_LINK_PATH="/tmp/.ff11_fixed_appimage_ubuntu_bionic_path_v0001"
+TMP_GLIBC_COPY="/tmp/.ff11_tmp_copy_appimage_ubuntu_bionic_glibc_i386_v0001"
 HERE="$(dirname "$(readlink -f "${0}")")"
 BASE_X86_LIB_PATH="${HERE}/usr/lib/i386-linux-gnu"
 BASE_X64_LIB_PATH="${HERE}/usr/lib/x86_64-linux-gnu"
@@ -7,9 +7,9 @@ F11_APPIMAGE_TMP_DIR="${HERE}_tmp"
 F11_APPIMAGE_CONF_DIR="${HOME}/.config/f11conf"
 F11_APPIMAGE_VKCONF="${F11_APPIMAGE_CONF_DIR}/vulkan.conf"
 
-# just for glibc:
-rm -rf "${FIXED_LINK_PATH}"
-ln -s "${HERE}" "${FIXED_LINK_PATH}"
+# just for tmp glibc copy after remove the old:
+rm -rf "${TMP_GLIBC_COPY}"
+cp -r "${HERE}/lib/i386-linux-gnu" "${TMP_GLIBC_COPY}"
 #===================================================================
 
 make_dir() { [ ! -d "${1}" ] && mkdir -p "${1}"; };
@@ -57,22 +57,22 @@ export LD_LIBRARY_PATH="${HERE}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}"
 #----------------------------------------
 
 #Sound Library
-export LD_LIBRARY_PATH="${BASE_X86_LIB_PATH}/pulseaudio:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH="${BASE_X86_LIB_PATH}/alsa-lib:${LD_LIBRARY_PATH}"
-export LADSPA_PATH="${BASE_X86_LIB_PATH}/ladspa:${LADSPA_PATH}"
-export AO_PLUGIN_PATH="${BASE_X86_LIB_PATH}/ao/plugins-4:${AO_PLUGIN_PATH}"
+export LD_LIBRARY_PATH="${BASE_X64_LIB_PATH}/pulseaudio:${BASE_X86_LIB_PATH}/pulseaudio:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${BASE_X64_LIB_PATH}/alsa-lib:${BASE_X86_LIB_PATH}/alsa-lib:${LD_LIBRARY_PATH}"
+export LADSPA_PATH="${BASE_X64_LIB_PATH}/ladspa:${BASE_X86_LIB_PATH}/ladspa:${LADSPA_PATH}"
+export AO_PLUGIN_PATH="${BASE_X64_LIB_PATH}/ao/plugins-4:${BASE_X86_LIB_PATH}/ao/plugins-4:${AO_PLUGIN_PATH}"
 
 # For mpg123
-export LD_LIBRARY_PATH="${BASE_X86_LIB_PATH}/mpg123:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${BASE_X64_LIB_PATH}/mpg123:${BASE_X86_LIB_PATH}/mpg123:${LD_LIBRARY_PATH}"
 
 # for libomxil-bellagio
-export BELLAGIO_SEARCH_PATH="${BASE_X86_LIB_PATH}/bellagio:${BASE_X86_LIB_PATH}/omxloaders:${BASE_X86_LIB_PATH}"
+export BELLAGIO_SEARCH_PATH="${BASE_X64_LIB_PATH}/bellagio:${BASE_X64_LIB_PATH}/omxloaders:${BASE_X86_LIB_PATH}/bellagio:${BASE_X86_LIB_PATH}/omxloaders:${BASE_X86_LIB_PATH}"
 
 # libGL drivers
-export LIBGL_DRIVERS_PATH="${BASE_X86_LIB_PATH}/dri:${LIBGL_DRIVERS_PATH}"
+export LIBGL_DRIVERS_PATH="${BASE_X64_LIB_PATH}/dri:${BASE_X86_LIB_PATH}/dri:${LIBGL_DRIVERS_PATH}"
 
 # Gallium Nine
-export D3D_MODULE_PATH="${BASE_X86_LIB_PATH}/d3d:${D3D_MODULE_PATH}"
+export D3D_MODULE_PATH="${BASE_X64_LIB_PATH}/d3d:${BASE_X86_LIB_PATH}/d3d:${D3D_MODULE_PATH}"
 
 #Font Config
 export FONTCONFIG_PATH="${HERE}/etc/fonts:${FONTCONFIG_PATH}"
@@ -85,15 +85,15 @@ export MAIN32LDLIBRARY="${BASE_X86_LIB_PATH}/ld-linux.so.2"
 #----------------------------------------
 
 # GTK 3.0
-export GTK_PATH="${BASE_X86_LIB_PATH}/gtk-3.0"
+export GTK_PATH="${BASE_X64_LIB_PATH}/gtk-3.0:${BASE_X86_LIB_PATH}/gtk-3.0"
 #------------------------------
 
 # GStreamer environment variables
 export GST_REGISTRY_REUSE_PLUGIN_SCANNER="no"
-export GST_PLUGIN_SYSTEM_PATH_1_0="${BASE_X86_LIB_PATH}/gstreamer-1.0/"
+export GST_PLUGIN_SYSTEM_PATH_1_0="${BASE_X64_LIB_PATH}/gstreamer-1.0/:${BASE_X86_LIB_PATH}/gstreamer-1.0/"
 
-export GST_PLUGIN_SCANNER_1_0="${BASE_X86_LIB_PATH}/gstreamer-1.0/gst-plugin-scanner"
-export GST_PTP_HELPER_1_0="${BASE_X86_LIB_PATH}/gstreamer-1.0/gst-ptp-helper"
+export GST_PLUGIN_SCANNER_1_0="${BASE_X64_LIB_PATH}/gstreamer-1.0/gst-plugin-scanner:${BASE_X86_LIB_PATH}/gstreamer-1.0/gst-plugin-scanner"
+export GST_PTP_HELPER_1_0="${BASE_X64_LIB_PATH}/gstreamer-1.0/gst-ptp-helper:${BASE_X86_LIB_PATH}/gstreamer-1.0/gst-ptp-helper"
 
 export GST_PLUGIN_PATH="${GST_PLUGIN_SYSTEM_PATH_1_0}"
 export GST_PLUGIN_SYSTEM_PATH="${GST_PLUGIN_SYSTEM_PATH_1_0}"
@@ -154,24 +154,24 @@ fi
 
 ##Wine ENVs (see: https://wiki.winehq.org/Wine-Staging_Environment_Variables)
 # arch and bottle first:
-export WINEARCH=win32
+export WINEARCH=win64
 if [ -z "${WINEPREFIX}" ]
 then
-	export WINEPREFIX="${HOME}/.wine32"
+	export WINEPREFIX="${HOME}/.wine64"
 fi
 #export WINEVERPATH="${WINEVERPATH:-"${HERE}"}"
 export WINEVERPATH="${HERE}"
 export WINESERVER="${HERE}/bin/wineserver"
-export WINELOADER="${HERE}/bin/wine"
-export WINEPATH="${HERE}/bin:${HERE}/lib/wine:${WINEPATH}"
-export WINEDLLPATH="${HERE}/lib/wine/fakedlls:${WINEDLLPATH}"
+export WINELOADER="${HERE}/bin/wine64"
+export WINEPATH="${HERE}/bin:${HERE}/lib64/wine:${HERE}/lib/wine:${WINEPATH}"
+export WINEDLLPATH="${HERE}/lib64/wine/fakedlls:${HERE}/lib/wine/fakedlls:${WINEDLLPATH}"
 #export WINEDEBUG="${WINEDEBUG:-"-all"}"
 #export WINEDEBUG=fixme-all
 #export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-"mscoree,mshtml="}"
 #export WINEESYNC=0
 #export WINEESYNC="${WINEESYNC:-"1"}"
 
-export LD_LIBRARY_PATH="${HERE}/lib/wine:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${HERE}/lib64/wine:${HERE}/lib/wine:${LD_LIBRARY_PATH}"
 export WINELDLIBRARY="${MAIN32LDLIBRARY}"
 #----------------------------------------
 
@@ -203,6 +203,8 @@ elif [ -x "${HERE}/bin/${BINARY_NAME}" ] ; then
 	MAIN="${HERE}/bin/${BINARY_NAME}"
 elif [ -x "${HERE}/usr/bin/${BINARY_NAME}" ] ; then
 	MAIN="${HERE}/usr/bin/${BINARY_NAME}"
+elif [ -x "${HERE}/bin/wine64" ] ; then
+	MAIN="${HERE}/bin/wine64"
 else
 	MAIN="${HERE}/bin/wine"
 fi

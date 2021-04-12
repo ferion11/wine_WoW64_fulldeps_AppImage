@@ -1,5 +1,5 @@
 #!/bin/bash
-FIXED_LINK_PATH="/tmp/.ff11_fixed_appimage_ubuntu_bionic_path_v0001"
+TMP_GLIBC_COPY="/tmp/.ff11_tmp_copy_appimage_ubuntu_bionic_glibc_i386_v0001"
 P_URL="https://github.com/ferion11/f11_wine64_builder/releases/download/v5.11/wine-staging-5.11.tar.gz"
 P_NAME="wine"
 P_MVERSION="staging-linux-amd64-fulldeps"
@@ -9,8 +9,6 @@ TEMP="$(echo $P_FILENAME | cut -d- -f3)"
 P_VERSION="${TEMP%???????}"
 WINE_WORKDIR="wineversion"
 PKG_WORKDIR='/tmp/.pkgcachedir'
-mkdir -p "$WINE_WORKDIR"
-mkdir -p "${PKG_WORKDIR}"
 
 echo "P_URL: ${P_URL}"
 echo "P_NAME: ${P_NAME}"
@@ -51,6 +49,8 @@ sudo apt-get -q -y update >/dev/null
 
 sudo apt install -y aptitude wget file bzip2 patchelf || die "ERROR: Some packages not found! to run the script!!!"
 #===========================================================================================
+mkdir -p "$WINE_WORKDIR"
+mkdir -p "${PKG_WORKDIR}"
 
 # Get Wine
 wget -nv -c "${P_URL}"
@@ -60,7 +60,8 @@ tar xf $P_FILENAME -C "$WINE_WORKDIR"/
 
 cd "$WINE_WORKDIR" || die "ERROR: Directory don't exist: $WINE_WORKDIR"
 
-sudo aptitude -y -d -o dir::cache::archives="${PKG_WORKDIR}" install winehq-staging wine-staging wine-staging-amd64 wine-staging-i386 winbind cabextract libva2:i386 libva-drm2:i386 libva-x11-2:i386 libvulkan1:i386 || die "* aptitude fail!"
+sudo aptitude -y -d -o dir::cache::archives="${PKG_WORKDIR}" install winehq-staging wine-staging wine-staging-amd64 wine-staging-i386 winbind cabextract libva2:i386 libva-drm2:i386 libva-x11-2:i386 libvulkan1:i386 || die "* aptitude cache install fail!"
+sudo aptitude -y -d -o dir::cache::archives="${PKG_WORKDIR}" reinstall libjpeg-turbo8 || die "* aptitude cache reinstall fail!"
 
 sudo chmod 777 "${PKG_WORKDIR}" -R
 
@@ -118,7 +119,7 @@ for file_i in $(find ./bin -type f -perm -u+x 2>&1); do
 	if [ -n "${IS_X86_EXEC}" ]; then
 		echo "======="
 		echo "patch: ${file_i}"
-		patchelf --set-interpreter ${FIXED_LINK_PATH}/lib/ld-linux.so.2 --set-rpath ${FIXED_LINK_PATH}/lib ${file_i}
+		patchelf --set-interpreter ${TMP_GLIBC_COPY}/ld-linux.so.2 --set-rpath ${TMP_GLIBC_COPY} ${file_i}
 		echo "======="
 	fi
 done
@@ -129,7 +130,7 @@ for file_i in $(find ./usr/bin -type f -perm -u+x 2>&1); do
 	if [ -n "${IS_X86_EXEC}" ]; then
 		echo "======="
 		echo "patch: ${file_i}"
-		patchelf --set-interpreter ${FIXED_LINK_PATH}/lib/ld-linux.so.2 --set-rpath ${FIXED_LINK_PATH}/lib ${file_i}
+		patchelf --set-interpreter ${TMP_GLIBC_COPY}/ld-linux.so.2 --set-rpath ${TMP_GLIBC_COPY} ${file_i}
 		echo "======="
 	fi
 done
