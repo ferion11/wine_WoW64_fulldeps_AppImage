@@ -153,16 +153,18 @@ fi
 #===================================================================
 
 ##Wine ENVs (see: https://wiki.winehq.org/Wine-Staging_Environment_Variables)
-# arch and bottle first:
-export WINEARCH=win64
-if [ -z "${WINEPREFIX}" ]
-then
-	export WINEPREFIX="${HOME}/.wine64"
+
+if [[ "${BINARY_NAME}" == "wine" ]]; then
+	export WINE="${INSTALL_DIR}/bin/wine"
+	export WINELOADER="${WINE}"
+else
+	export WINE="${INSTALL_DIR}/bin/wine64"
+	export WINELOADER="${WINE}"
 fi
+
 #export WINEVERPATH="${WINEVERPATH:-"${HERE}"}"
 export WINEVERPATH="${HERE}"
 export WINESERVER="${HERE}/bin/wineserver"
-export WINELOADER="${HERE}/bin/wine64"
 export WINEPATH="${HERE}/bin:${HERE}/lib64/wine:${HERE}/lib/wine:${WINEPATH}"
 export WINEDLLPATH="${HERE}/lib64/wine/fakedlls:${HERE}/lib/wine/fakedlls:${WINEDLLPATH}"
 #export WINEDEBUG="${WINEDEBUG:-"-all"}"
