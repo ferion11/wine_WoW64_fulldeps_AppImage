@@ -1,6 +1,7 @@
 #!/bin/bash
 TMP_GLIBC_COPY="/tmp/.ff11_tmp_copy_appimage_ubuntu_bionic_glibc_i386_v0001"
-P_URL="https://github.com/ferion11/f11_wine64_builder/releases/download/v5.11/wine-staging-5.11.tar.gz"
+#P_URL="https://github.com/ferion11/f11_wine64_builder/releases/download/v5.11/wine-staging-5.11.tar.gz"
+P_URL="https://github.com/ferion11/f11_wine64_builder/releases/download/continuous-master/wine-staging-6.5.tar.gz"
 P_NAME="wine"
 P_MVERSION="staging-linux-amd64-fulldeps"
 P_FILENAME="$(echo ${P_URL} | cut -d/ -f9)"
