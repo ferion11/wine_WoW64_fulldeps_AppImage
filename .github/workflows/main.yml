@@ -39,7 +39,7 @@ jobs:
           # else
           #  echo "WINE_VER=staging_$(wget -qO- https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/main/binary-amd64/ | grep wine-staging | sed 's|_| |g;s|~| |g' | awk '{print $5}' | tail -n1)" >> $GITHUB_ENV
           # fi
-          echo "WINE_VER=staging_8.21" >> $GITHUB_ENV
+          echo "WINE_VER=staging_9.11" >> $GITHUB_ENV
           # Nvidia
           # echo "NVDV=$(wget "https://launchpad.net/~graphics-drivers/+archive/ubuntu/ppa/+packages?field.name_filter=&field.status_filter=published&field.series_filter=kinetic" -qO- | grep -Eo drivers-.*changes | sed -r "s|_| |g;s|-| |g" | tail -n1 | awk '{print $9}')" >> $GITHUB_ENV
 
