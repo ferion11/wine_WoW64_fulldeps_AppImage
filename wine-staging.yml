@@ -167,7 +167,8 @@ AppDir:
      # Patch wrapper script
      sed -i 's|wine-appimage|wine-appimage-staging-test|' AppDir/wrapper
 
-     WINE_VER="$(wget -qO- https://github.com/mmtrt/Wine-Builds/releases/expanded_assets/latest | grep -Eo '/wine-[0-9].*xz"' | cut -d'-' -f2 | head -1)"
+     #WINE_VER="$(wget -qO- https://github.com/mmtrt/Wine-Builds/releases/expanded_assets/latest | grep -Eo '/wine-[0-9].*xz"' | cut -d'-' -f2 | head -1)"
+     WINE_VER="8.21"
 
      wget -q -c https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/main/binary-i386/wine-staging_${WINE_VER}~jammy-1_i386.deb
      wget -q -c https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/main/binary-i386/wine-staging-i386_${WINE_VER}~jammy-1_i386.deb
