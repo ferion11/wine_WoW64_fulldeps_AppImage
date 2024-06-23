@@ -4,7 +4,7 @@ name: CI
 
 # Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the old-v8 branch
+  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
     paths-ignore: [ '**/README.md' ]
@@ -64,5 +64,5 @@ jobs:
           automatic_release_tag: staging-test
           prerelease: false
           draft: false
-          files: /home/runner/work/WINE_AppImage/WINE_AppImage/*.AppImage*
+          files: /home/runner/work/wine_WoW64_fulldeps_AppImage/wine_WoW64_fulldeps_AppImage/*.AppImage*
           repo_token: ${{ secrets.GITHUB_TOKEN }}

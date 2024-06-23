@@ -259,7 +259,7 @@ AppDir:
     - /opt/wine-staging:$APPDIR/opt/wine-staging
 
 AppImage:
-  update-information: gh-releases-zsync|mmtrt|WINE_AppImage|staging-v8|wine-staging*.AppImage.zsync
+  update-information: gh-releases-zsync|ferion11|wine_WoW64_fulldeps_AppImage|staging-test|wine-staging*.AppImage.zsync
   #sign-key: None
   arch: x86_64
 
